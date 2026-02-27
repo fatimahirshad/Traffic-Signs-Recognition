@@ -1,4 +1,4 @@
-# streamlit_app.py - TFLite Traffic Sign Recognition (Clickable Thumbnails)
+# streamlit_app.py - TFLite Traffic Sign Recognition (Demo Images in Sidebar)
 
 import streamlit as st
 import tensorflow as tf
@@ -18,7 +18,7 @@ st.set_page_config(
 
 st.title("🚦 Traffic Sign Recognition App")
 st.markdown("""
-Upload a traffic sign image or click on a demo image below to see the prediction.
+Upload a traffic sign image or click on a demo image in the sidebar to see the prediction.
 """)
 
 # -----------------------------
@@ -75,29 +75,27 @@ if uploaded_file:
     selected_image = Image.open(uploaded_file)
 
 # -----------------------------
-# 6. Demo Images Grid
+# 6. Sidebar - Demo Images
 # -----------------------------
-st.subheader("Demo Images - Click to Predict")
+st.sidebar.header("Or try Demo Images")
 demo_urls = [
     "https://raw.githubusercontent.com/fatimahirshad/Traffic-Signs-Recognition/main/Visuals/IMG_4311.jpg",
     "https://raw.githubusercontent.com/fatimahirshad/Traffic-Signs-Recognition/main/Visuals/IMG_4462.jpg",
     "https://raw.githubusercontent.com/fatimahirshad/Traffic-Signs-Recognition/main/Visuals/IMG_4235.jpg"
 ]
 
-# Display thumbnails in 3 columns
-cols = st.columns(len(demo_urls))
+cols = st.sidebar.columns(len(demo_urls))
 for idx, url in enumerate(demo_urls):
     response = requests.get(url)
     img = Image.open(BytesIO(response.content))
-    # Display thumbnail button
     if cols[idx].button("", key=f"demo_{idx}"):
         selected_image = img
-    cols[idx].image(img.resize((120,120)), use_column_width=False)
+    cols[idx].image(img.resize((80,80)), use_column_width=False)
 
 # -----------------------------
-# 7. Show Selected Image and Predict
+# 7. Show Prediction Above Image
 # -----------------------------
 if selected_image:
-    st.image(selected_image, caption="Selected Image", use_column_width=True)
     pred_class = predict_tflite(selected_image)
     st.success(f"Predicted Class: **{pred_class}**")
+    st.image(selected_image.resize((300,300)), caption="Selected Image", use_column_width=False)

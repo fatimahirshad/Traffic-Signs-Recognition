@@ -35,7 +35,7 @@ def load_trained_model(model_path):
     model = load_model(model_path)
     return model
 
-model = load_trained_model("traffic_sign_mobilenetv2.keras")
+model = load_trained_model("traffic_sign_model_optimized.tflite")
 
 # -----------------------------
 # 3. Load Class Names

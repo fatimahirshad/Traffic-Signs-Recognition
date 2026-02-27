@@ -1,8 +1,7 @@
-# streamlit_app.py - Traffic Sign Recognition (TFLite, Upload-Only UI)
+# streamlit_app.py - TFLite Traffic Sign Recognition (Correct Preprocessing)
 
 import streamlit as st
 import tensorflow as tf
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 import numpy as np
 from PIL import Image
 
@@ -17,7 +16,7 @@ st.set_page_config(
 
 st.title("🚦 Traffic Sign Recognition App")
 st.markdown("""
-Upload a traffic sign image, and the app will predict its class with confidence using a **MobileNetV2-based CNN (TFLite optimized)**.
+Upload a traffic sign image, and the app will predict its class with confidence using a **MobileNetV2-based TFLite model**.
 """)
 
 # -----------------------------
@@ -31,13 +30,12 @@ def load_tflite_model(model_path):
     output_details = interpreter.get_output_details()
     return interpreter, input_details, output_details
 
-# Provide path to your optimized TFLite model
 interpreter, input_details, output_details = load_tflite_model("traffic_sign_model_optimized.tflite")
 
 # -----------------------------
 # 3. Define Class Names
 # -----------------------------
-# Replace with your actual class names in order used during training
+# Must match exactly the order used during training
 class_names = [
     "Bridge Ahead", "Cross Roads", "Give Way", "Left bend", "No Horns", 
     "No Mobile Allowed", "No Overtaking", "No Parking", "No U-Turn", 
@@ -54,16 +52,21 @@ class_names = [
 # 4. Prediction Function
 # -----------------------------
 def predict_tflite(img: Image.Image):
+    # Resize image to 224x224
     img_resized = img.resize((224,224))
-    x = np.array(img_resized)
-    x = np.expand_dims(x, axis=0)
-    x = preprocess_input(x)
-    x = x.astype(np.uint8)  # TFLite expects uint8 for integer quantized models
     
+    # Convert to numpy array, keep uint8 (integer quantized)
+    x = np.array(img_resized, dtype=np.uint8)
+    
+    # Add batch dimension
+    x = np.expand_dims(x, axis=0)  # shape (1,224,224,3)
+    
+    # Set tensor and invoke
     interpreter.set_tensor(input_details[0]['index'], x)
     interpreter.invoke()
-    pred = interpreter.get_tensor(output_details[0]['index'])[0]
     
+    # Get prediction
+    pred = interpreter.get_tensor(output_details[0]['index'])[0]
     pred_class = class_names[np.argmax(pred)]
     confidence = np.max(pred)
     return pred_class, confidence
@@ -78,9 +81,11 @@ if uploaded_file:
     img = Image.open(uploaded_file)
     st.image(img, caption="Uploaded Image", use_column_width=True)
     
+    # Predict
     pred_class, confidence = predict_tflite(img)
+    
     st.success(f"Predicted Class: **{pred_class}**")
     st.info(f"Confidence: **{confidence*100:.2f}%**")
     
     st.markdown("---")
-    st.markdown("✅ **Upload another image to get prediction.**")
+    st.markdown("✅ Upload another image to get prediction.")

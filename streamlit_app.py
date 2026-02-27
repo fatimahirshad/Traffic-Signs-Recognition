@@ -79,9 +79,9 @@ if uploaded_file:
 st.sidebar.header("Or try Demo Images")
 demo_images = {
     
-    "Stop Sign": "https://raw.githubusercontent.com/<username>/<repo>/main/demo_images/stop.jpg",
-    "Give Way": "https://raw.githubusercontent.com/<username>/<repo>/main/demo_images/give_way.jpg",
-    "No Parking": "https://raw.githubusercontent.com/<username>/<repo>/main/demo_images/no_parking.jpg"
+    "image1": "Visuals/IMG_4235.jpg",
+    "image2": "Visuals/IMG_4311.jpg",
+    "image3": "Visuals/IMG_4462.jpg"
 }
 
 for label, url in demo_images.items():

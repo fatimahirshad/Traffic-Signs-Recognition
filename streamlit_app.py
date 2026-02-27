@@ -79,7 +79,7 @@ if uploaded_file:
 st.sidebar.header("Or try Demo Images")
 demo_images = {
     
-    "image1": "Visuals/IMG_4235.jpg",
+    "image1": "https://github.com/fatimahirshad/Traffic-Signs-Recognition/blob/main/Visuals/IMG_4235.jpg",
     "image2": "Visuals/IMG_4311.jpg",
     "image3": "Visuals/IMG_4462.jpg"
 }

@@ -1,4 +1,5 @@
-# streamlit_app.py - TFLite Traffic Sign Recognition (Click-to-Test Images)
+# streamlit_app.py - TFLite Traffic Sign Recognition (Clickable Thumbnails)
+
 import streamlit as st
 import tensorflow as tf
 import numpy as np
@@ -17,7 +18,7 @@ st.set_page_config(
 
 st.title("🚦 Traffic Sign Recognition App")
 st.markdown("""
-Upload a traffic sign image or **click on a demo image** below to see the prediction.
+Upload a traffic sign image or click on a demo image below to see the prediction.
 """)
 
 # -----------------------------
@@ -74,20 +75,24 @@ if uploaded_file:
     selected_image = Image.open(uploaded_file)
 
 # -----------------------------
-# 6. Demo Images
+# 6. Demo Images Grid
 # -----------------------------
-st.sidebar.header("Or try Demo Images")
-demo_images = {
-    
-    "image1": "https://github.com/fatimahirshad/Traffic-Signs-Recognition/blob/main/Visuals/IMG_4235.jpg",
-    "image2": "Visuals/IMG_4311.jpg",
-    "image3": "Visuals/IMG_4462.jpg"
-}
+st.subheader("Demo Images - Click to Predict")
+demo_urls = [
+    "https://raw.githubusercontent.com/fatimahirshad/Traffic-Signs-Recognition/main/Visuals/IMG_4311.jpg",
+    "https://raw.githubusercontent.com/fatimahirshad/Traffic-Signs-Recognition/main/Visuals/IMG_4462.jpg",
+    "https://raw.githubusercontent.com/fatimahirshad/Traffic-Signs-Recognition/main/Visuals/IMG_4235.jpg"
+]
 
-for label, url in demo_images.items():
-    if st.sidebar.button(label):
-        response = requests.get(url)
-        selected_image = Image.open(BytesIO(response.content))
+# Display thumbnails in 3 columns
+cols = st.columns(len(demo_urls))
+for idx, url in enumerate(demo_urls):
+    response = requests.get(url)
+    img = Image.open(BytesIO(response.content))
+    # Display thumbnail button
+    if cols[idx].button("", key=f"demo_{idx}"):
+        selected_image = img
+    cols[idx].image(img.resize((120,120)), use_column_width=False)
 
 # -----------------------------
 # 7. Show Selected Image and Predict

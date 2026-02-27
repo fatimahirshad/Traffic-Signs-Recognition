@@ -1,9 +1,10 @@
-# streamlit_app.py - TFLite Traffic Sign Recognition (Correct Preprocessing)
-
+# streamlit_app.py - TFLite Traffic Sign Recognition (Click-to-Test Images)
 import streamlit as st
 import tensorflow as tf
 import numpy as np
 from PIL import Image
+import requests
+from io import BytesIO
 
 # -----------------------------
 # 1. Page Config
@@ -16,7 +17,7 @@ st.set_page_config(
 
 st.title("🚦 Traffic Sign Recognition App")
 st.markdown("""
-Upload a traffic sign image, and the app will predict its class with confidence using a **MobileNetV2-based TFLite model**.
+Upload a traffic sign image or **click on a demo image** below to see the prediction.
 """)
 
 # -----------------------------
@@ -33,9 +34,8 @@ def load_tflite_model(model_path):
 interpreter, input_details, output_details = load_tflite_model("traffic_sign_model_optimized.tflite")
 
 # -----------------------------
-# 3. Define Class Names
+# 3. Class Names
 # -----------------------------
-# Must match exactly the order used during training
 class_names = [
     "Bridge Ahead", "Cross Roads", "Give Way", "Left bend", "No Horns", 
     "No Mobile Allowed", "No Overtaking", "No Parking", "No U-Turn", 
@@ -52,40 +52,47 @@ class_names = [
 # 4. Prediction Function
 # -----------------------------
 def predict_tflite(img: Image.Image):
-    # Resize image to 224x224
     img_resized = img.resize((224,224))
-    
-    # Convert to numpy array, keep uint8 (integer quantized)
     x = np.array(img_resized, dtype=np.uint8)
+    x = np.expand_dims(x, axis=0)
     
-    # Add batch dimension
-    x = np.expand_dims(x, axis=0)  # shape (1,224,224,3)
-    
-    # Set tensor and invoke
     interpreter.set_tensor(input_details[0]['index'], x)
     interpreter.invoke()
     
-    # Get prediction
     pred = interpreter.get_tensor(output_details[0]['index'])[0]
     pred_class = class_names[np.argmax(pred)]
-    confidence = np.max(pred)
-    return pred_class, confidence
+    return pred_class
 
 # -----------------------------
 # 5. Sidebar - Upload Image
 # -----------------------------
 st.sidebar.header("Upload Traffic Sign Image")
 uploaded_file = st.sidebar.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+selected_image = None
 
 if uploaded_file:
-    img = Image.open(uploaded_file)
-    st.image(img, caption="Uploaded Image", use_column_width=True)
+    selected_image = Image.open(uploaded_file)
+
+# -----------------------------
+# 6. Demo Images
+# -----------------------------
+st.sidebar.header("Or try Demo Images")
+demo_images = {
     
-    # Predict
-    pred_class, confidence = predict_tflite(img)
-    
+    "Stop Sign": "https://raw.githubusercontent.com/<username>/<repo>/main/demo_images/stop.jpg",
+    "Give Way": "https://raw.githubusercontent.com/<username>/<repo>/main/demo_images/give_way.jpg",
+    "No Parking": "https://raw.githubusercontent.com/<username>/<repo>/main/demo_images/no_parking.jpg"
+}
+
+for label, url in demo_images.items():
+    if st.sidebar.button(label):
+        response = requests.get(url)
+        selected_image = Image.open(BytesIO(response.content))
+
+# -----------------------------
+# 7. Show Selected Image and Predict
+# -----------------------------
+if selected_image:
+    st.image(selected_image, caption="Selected Image", use_column_width=True)
+    pred_class = predict_tflite(selected_image)
     st.success(f"Predicted Class: **{pred_class}**")
-    st.info(f"Confidence: **{confidence*100:.2f}%**")
-    
-    st.markdown("---")
-    st.markdown("✅ Upload another image to get prediction.")
